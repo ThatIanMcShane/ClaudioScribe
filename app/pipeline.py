@@ -246,7 +246,7 @@ def _upload_to_gdrive(local_path, folder_type):
     Skips upload if a file with the same name already exists (dedup handled in GDriveClient).
     """
     try:
-        from gdrive_client import get_gdrive_client_from_config
+        from clients.gdrive_client import get_gdrive_client_from_config
 
         client = get_gdrive_client_from_config()
         if client is None:
@@ -270,7 +270,7 @@ def _upload_to_gdrive(local_path, folder_type):
 def _already_in_gdrive(filename):
     """Check if a recording already exists in the Google Drive recordings folder."""
     try:
-        from gdrive_client import get_gdrive_client_from_config
+        from clients.gdrive_client import get_gdrive_client_from_config
 
         client = get_gdrive_client_from_config()
         if client is None:
@@ -290,7 +290,7 @@ def _already_in_gdrive(filename):
 def _record_history(filename, status, message=""):
     """Record processing result for the status page."""
     try:
-        from settings_app import add_history_entry
+        from app import add_history_entry
         add_history_entry(filename, status, message)
     except Exception:
         logger.debug("Could not record history entry")

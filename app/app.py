@@ -7,7 +7,7 @@ import threading
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
 from config import DEFAULTS, load_config, save_config
-from plaud_client import PlaudClient
+from clients.plaud_client import PlaudClient
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -454,7 +454,7 @@ def google_callback():
 
     # Create folder structure on Drive
     try:
-        from gdrive_client import GDriveClient
+        from clients.gdrive_client import GDriveClient
 
         client = GDriveClient(
             access_token=creds.token,

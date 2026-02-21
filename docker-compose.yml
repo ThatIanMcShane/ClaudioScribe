@@ -2,7 +2,9 @@ name: claudioscribe
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     volumes:
       - "./config:/app/config"
     ports:

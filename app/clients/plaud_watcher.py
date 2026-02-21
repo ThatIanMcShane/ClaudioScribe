@@ -6,8 +6,11 @@ import os
 import time
 from datetime import datetime, timezone
 
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 from config import load_config
-from plaud_client import PlaudClient
+from clients.plaud_client import PlaudClient
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),

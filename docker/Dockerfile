@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir --upgrade pip "setuptools<71" wheel && \
     pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir --no-build-isolation -r requirements.txt
 
-COPY pipeline.py watcher.py doc_writer.py config.py settings_app.py start.sh plaud_client.py plaud_watcher.py gdrive_client.py ./
-COPY templates/ templates/
+COPY app/ ./
+COPY docker/start.sh ./
 
 RUN useradd -r -m pipeline \
     && mkdir -p /watch /tmp/claudioscribe /app/config \
@@ -25,4 +25,4 @@ EXPOSE 8080
 
 USER pipeline
 
-CMD ["bash", "start.sh"]
+CMD ["bash", "./start.sh"]

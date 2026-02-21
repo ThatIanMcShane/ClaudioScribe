@@ -55,21 +55,23 @@ The settings overlay is organized by service:
 ## Project Structure
 
 ```
-settings_app.py      Web UI: dashboard, configuration, recording management
-pipeline.py          Processing pipeline: download, transcribe, analyze, upload
-plaud_client.py      Plaud REST API client (auth, list, download)
-plaud_watcher.py     Background poller for Plaud connection status
-doc_writer.py        Markdown-to-docx converter with hyperlink/table support
-gdrive_client.py     Google Drive API client (OAuth, folders, upload, dedup)
-config.py            JSON-based configuration with defaults
-watcher.py           File system watcher for audio files (legacy)
-start.sh             Container entrypoint (starts poller + web UI)
-templates/
-  settings.html      Single-page dashboard and configuration overlay
-  privacy.html       Privacy policy (required for Google OAuth)
-Dockerfile           Container build (non-root user, pinned deps)
-docker-compose.yml   Service definition with config volume
-requirements.txt     Pinned Python dependencies
+app/
+  app.py               Web UI: dashboard, configuration, recording management
+  pipeline.py          Processing pipeline: download, transcribe, analyze, upload
+  doc_writer.py        Markdown-to-docx converter with hyperlink/table support
+  config.py            JSON-based configuration with defaults
+  clients/
+    plaud_client.py    Plaud REST API client (auth, list, download)
+    plaud_watcher.py   Background poller for Plaud connection status
+    gdrive_client.py   Google Drive API client (OAuth, folders, upload, dedup)
+  templates/
+    settings.html      Single-page dashboard and configuration overlay
+    privacy.html       Privacy policy (required for Google OAuth)
+docker/
+  Dockerfile           Container build (non-root user, pinned deps)
+  start.sh             Container entrypoint (starts poller + web UI)
+docker-compose.yml     Service definition with config volume
+requirements.txt       Pinned Python dependencies
 ```
 
 ## Setup

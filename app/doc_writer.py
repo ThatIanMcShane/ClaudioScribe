@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone
 
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
@@ -157,9 +158,18 @@ def create_document(title, content, output_dir, timestamp=""):
     doc.add_heading(safe_title, level=0)
 
     table_buf = []
+    centered = False
 
     for line in content.split("\n"):
         stripped = line.strip()
+
+        # Handle <div align="center"> blocks
+        if re.match(r'<div\s+align=["\']center["\']', stripped, re.IGNORECASE):
+            centered = True
+            continue
+        if stripped.lower() in ("</div>",):
+            centered = False
+            continue
 
         # Accumulate table rows
         if stripped.startswith("|"):
@@ -172,7 +182,12 @@ def create_document(title, content, output_dir, timestamp=""):
 
         if not stripped:
             continue
-        if stripped.startswith("### "):
+
+        p = None
+        if stripped.startswith("#### "):
+            p = doc.add_heading("", level=4)
+            _add_formatted_runs(p, stripped[5:])
+        elif stripped.startswith("### "):
             p = doc.add_heading("", level=3)
             _add_formatted_runs(p, stripped[4:])
         elif stripped.startswith("## "):
@@ -196,6 +211,9 @@ def create_document(title, content, output_dir, timestamp=""):
         else:
             p = doc.add_paragraph()
             _add_formatted_runs(p, stripped)
+
+        if centered and p is not None:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Flush trailing table
     if table_buf:
