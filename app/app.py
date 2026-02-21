@@ -3,11 +3,12 @@ import logging
 import os
 import secrets
 import threading
+from datetime import UTC
 
+from clients.plaud_client import PlaudClient
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
 from config import DEFAULTS, load_config, save_config
-from clients.plaud_client import PlaudClient
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -28,6 +29,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
 
 # --- History helpers ---
 
+
 def _load_history():
     """Load processing history from JSON file."""
     if not os.path.exists(HISTORY_FILE):
@@ -41,15 +43,18 @@ def _load_history():
 
 def add_history_entry(filename, status, message=""):
     """Append a processing event to history (called from pipeline)."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     history = _load_history()
-    history.insert(0, {
-        "filename": filename,
-        "status": status,
-        "message": message,
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-    })
+    history.insert(
+        0,
+        {
+            "filename": filename,
+            "status": status,
+            "message": message,
+            "timestamp": datetime.now(tz=UTC).isoformat(),
+        },
+    )
     history = history[:MAX_HISTORY]
 
     os.makedirs(os.path.dirname(HISTORY_FILE), exist_ok=True)
@@ -58,6 +63,7 @@ def add_history_entry(filename, status, message=""):
 
 
 # --- Plaud status helpers ---
+
 
 def _load_plaud_status():
     """Load Plaud connection status."""
@@ -72,15 +78,18 @@ def _load_plaud_status():
 
 def _write_plaud_status(ok, message):
     """Write Plaud connection status for display on settings page."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     os.makedirs(os.path.dirname(PLAUD_STATUS_FILE), exist_ok=True)
     with open(PLAUD_STATUS_FILE, "w") as f:
-        json.dump({
-            "ok": ok,
-            "message": message,
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-        }, f)
+        json.dump(
+            {
+                "ok": ok,
+                "message": message,
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            },
+            f,
+        )
 
 
 def _test_plaud_token(token, base_url):
@@ -94,6 +103,7 @@ def _test_plaud_token(token, base_url):
 
 
 # --- Settings page ---
+
 
 @app.route("/")
 def settings_page():
@@ -133,16 +143,22 @@ def save_settings():
 
     data["output_dir"] = current.get("output_dir", "/tmp/claudioscribe")
     data["log_level"] = request.form.get("log_level", "INFO").strip()
-    data["claude_model"] = request.form.get("claude_model", "").strip() or current.get("claude_model", "claude-sonnet-4-6")
+    data["claude_model"] = request.form.get("claude_model", "").strip() or current.get(
+        "claude_model", "claude-sonnet-4-6"
+    )
     data["claude_prompt"] = request.form.get("claude_prompt", "").strip()
     data["plaud_base_url"] = request.form.get("plaud_base_url", "https://api.plaud.ai").strip()
     data["plaud_poll_interval"] = current.get("plaud_poll_interval", 60)
 
     # Preserve Google Drive settings
     for gdrive_key in (
-        "gdrive_enabled", "gdrive_access_token", "gdrive_refresh_token",
-        "gdrive_token_expiry", "gdrive_folder_id",
-        "gdrive_documents_folder_id", "gdrive_recordings_folder_id",
+        "gdrive_enabled",
+        "gdrive_access_token",
+        "gdrive_refresh_token",
+        "gdrive_token_expiry",
+        "gdrive_folder_id",
+        "gdrive_documents_folder_id",
+        "gdrive_recordings_folder_id",
     ):
         data[gdrive_key] = current.get(gdrive_key, "")
 
@@ -157,6 +173,7 @@ def save_settings():
 
 
 # --- Plaud Recordings routes ---
+
 
 @app.route("/recordings")
 def recordings_list():
@@ -193,27 +210,27 @@ def recordings_list():
         safe_name = _sanitize_filename(raw_name)
         if not safe_name.lower().endswith((".mp3", ".ogg", ".m4a", ".wav", ".flac")):
             safe_name += ".mp3"
-        local = (
-            os.path.exists(os.path.join("/watch/input", safe_name))
-            or os.path.exists(os.path.join(ARCHIVE_DIR, safe_name))
+        local = os.path.exists(os.path.join("/watch/input", safe_name)) or os.path.exists(
+            os.path.join(ARCHIVE_DIR, safe_name)
         )
         # Recording start time (ms epoch from Plaud API)
         start_time_ms = rec.get("start_time", 0)
         start_time_iso = ""
         if start_time_ms:
-            from datetime import datetime, timezone
-            start_time_iso = datetime.fromtimestamp(
-                start_time_ms / 1000, tz=timezone.utc
-            ).isoformat()
+            from datetime import datetime
 
-        result.append({
-            "id": file_id,
-            "filename": raw_name,
-            "status": status_entry.get("status", "new"),
-            "duration": duration_str,
-            "start_time": start_time_iso,
-            "local": local,
-        })
+            start_time_iso = datetime.fromtimestamp(start_time_ms / 1000, tz=UTC).isoformat()
+
+        result.append(
+            {
+                "id": file_id,
+                "filename": raw_name,
+                "status": status_entry.get("status", "new"),
+                "duration": duration_str,
+                "start_time": start_time_iso,
+                "local": local,
+            }
+        )
     return jsonify(result)
 
 
@@ -256,6 +273,7 @@ def process_recording(file_id):
     def _run():
         with _processing_lock:
             from pipeline import process_plaud_recording
+
             # Create a fresh client for the thread
             thread_client = PlaudClient(
                 token=token,
@@ -270,6 +288,7 @@ def process_recording(file_id):
 
 
 # --- Recording file management ---
+
 
 @app.route("/recording/<file_id>/audio", methods=["DELETE"])
 def delete_recording_audio(file_id):
@@ -311,6 +330,7 @@ def delete_recording_audio(file_id):
 def delete_recording_documents(file_id):
     """Delete local transcripts and summaries for a recording."""
     import glob
+
     from pipeline import _sanitize_filename
 
     config = load_config()
@@ -356,6 +376,7 @@ def delete_recording_documents(file_id):
 
 
 # --- Google Drive OAuth routes ---
+
 
 @app.route("/auth/google")
 def google_auth():
@@ -449,8 +470,7 @@ def google_callback():
     config["gdrive_access_token"] = creds.token
     config["gdrive_refresh_token"] = creds.refresh_token or config.get("gdrive_refresh_token", "")
     if creds.expiry:
-        from datetime import timezone
-        config["gdrive_token_expiry"] = creds.expiry.replace(tzinfo=timezone.utc).isoformat()
+        config["gdrive_token_expiry"] = creds.expiry.replace(tzinfo=UTC).isoformat()
 
     # Create folder structure on Drive
     try:
@@ -512,6 +532,7 @@ def anthropic_test():
         return jsonify({"ok": False, "message": "No API key configured"})
     try:
         import anthropic
+
         client = anthropic.Anthropic(api_key=api_key)
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
@@ -531,16 +552,20 @@ def anthropic_test():
 def whisper_status():
     """Return Whisper model cache info."""
     from pipeline import _WHISPER_CACHE_DIR
+
     model_path = os.path.join(_WHISPER_CACHE_DIR, "base.pt")
     if not os.path.exists(model_path):
         return jsonify({"cached": False})
     stat = os.stat(model_path)
-    from datetime import datetime, timezone
-    return jsonify({
-        "cached": True,
-        "size_mb": round(stat.st_size / (1024 * 1024), 1),
-        "downloaded": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
-    })
+    from datetime import datetime
+
+    return jsonify(
+        {
+            "cached": True,
+            "size_mb": round(stat.st_size / (1024 * 1024), 1),
+            "downloaded": datetime.fromtimestamp(stat.st_mtime, tz=UTC).isoformat(),
+        }
+    )
 
 
 _whisper_download_status = {"running": False, "ok": None, "error": ""}
@@ -568,6 +593,7 @@ def whisper_update():
     def _download():
         try:
             import whisper
+
             whisper.load_model("base", download_root=_WHISPER_CACHE_DIR)
             logger.info("Whisper model re-downloaded successfully")
             _whisper_download_status["ok"] = True
@@ -590,5 +616,6 @@ def whisper_update_status():
 
 if __name__ == "__main__":
     from pipeline import reset_stale_statuses
+
     reset_stale_statuses()
     app.run(host="0.0.0.0", port=8080)

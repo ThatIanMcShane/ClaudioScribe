@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -33,9 +33,7 @@ class GDriveClient:
         )
         if token_expiry:
             try:
-                self._creds.expiry = datetime.fromisoformat(token_expiry).replace(
-                    tzinfo=None
-                )
+                self._creds.expiry = datetime.fromisoformat(token_expiry).replace(tzinfo=None)
             except (ValueError, TypeError):
                 pass
 
@@ -55,9 +53,7 @@ class GDriveClient:
             config = load_config()
             config["gdrive_access_token"] = self._creds.token
             if self._creds.expiry:
-                config["gdrive_token_expiry"] = self._creds.expiry.replace(
-                    tzinfo=timezone.utc
-                ).isoformat()
+                config["gdrive_token_expiry"] = self._creds.expiry.replace(tzinfo=UTC).isoformat()
             save_config(config)
             logger.info("Saved refreshed Google token to config")
         except Exception:
@@ -71,11 +67,7 @@ class GDriveClient:
             f"name = '{name}' and mimeType = 'application/vnd.google-apps.folder' "
             f"and '{parent_id}' in parents and trashed = false"
         )
-        results = (
-            service.files()
-            .list(q=query, spaces="drive", fields="files(id, name)")
-            .execute()
-        )
+        results = service.files().list(q=query, spaces="drive", fields="files(id, name)").execute()
         files = results.get("files", [])
         if files:
             logger.info("Found existing folder: %s (%s)", name, files[0]["id"])
@@ -113,15 +105,8 @@ class GDriveClient:
         service = self._get_service()
         # Escape single quotes in filename for the query
         safe_name = filename.replace("'", "\\'")
-        query = (
-            f"name = '{safe_name}' "
-            f"and '{folder_id}' in parents and trashed = false"
-        )
-        results = (
-            service.files()
-            .list(q=query, spaces="drive", fields="files(id, name)", pageSize=1)
-            .execute()
-        )
+        query = f"name = '{safe_name}' and '{folder_id}' in parents and trashed = false"
+        results = service.files().list(q=query, spaces="drive", fields="files(id, name)", pageSize=1).execute()
         files = results.get("files", [])
         if files:
             logger.info("File already exists in Drive: %s (%s)", filename, files[0]["id"])
@@ -141,11 +126,7 @@ class GDriveClient:
 
         metadata = {"name": filename, "parents": [folder_id]}
         media = MediaFileUpload(local_path, resumable=True)
-        uploaded = (
-            service.files()
-            .create(body=metadata, media_body=media, fields="id")
-            .execute()
-        )
+        uploaded = service.files().create(body=metadata, media_body=media, fields="id").execute()
         logger.info("Uploaded %s to Google Drive (%s)", filename, uploaded["id"])
         return uploaded["id"]
 

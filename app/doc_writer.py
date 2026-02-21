@@ -1,20 +1,20 @@
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 logger = logging.getLogger(__name__)
 
 # Regex for inline bold, italic, hyperlinks, and bare URLs
 _INLINE_RE = re.compile(
-    r"(\*\*(.+?)\*\*"                          # **bold**
-    r"|\*(.+?)\*"                              # *italic*
-    r"|\[([^\]]+)\]\(([^)]+)\)"                # [text](url)
+    r"(\*\*(.+?)\*\*"  # **bold**
+    r"|\*(.+?)\*"  # *italic*
+    r"|\[([^\]]+)\]\(([^)]+)\)"  # [text](url)
     r"|(?<![(\w])(https?://[^\s<>\")]+[^\s<>\".,;:!?)_])"  # bare URL
     r")"
 )
@@ -238,12 +238,12 @@ def list_documents(output_dir):
             continue
         path = os.path.join(output_dir, name)
         stat = os.stat(path)
-        files.append({
-            "name": name,
-            "path": path,
-            "modified": datetime.fromtimestamp(
-                stat.st_mtime, tz=timezone.utc
-            ).isoformat(),
-        })
+        files.append(
+            {
+                "name": name,
+                "path": path,
+                "modified": datetime.fromtimestamp(stat.st_mtime, tz=UTC).isoformat(),
+            }
+        )
 
     return {"files": files}

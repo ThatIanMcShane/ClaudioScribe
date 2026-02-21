@@ -1,12 +1,12 @@
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import anthropic
+import doc_writer
 import whisper
 
-import doc_writer
 from config import load_config
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ def _get_whisper_model():
 
 # --- Pipeline status tracking ---
 
+
 def load_pipeline_status():
     """Load pipeline status for all recordings."""
     if not os.path.exists(PIPELINE_STATUS_FILE):
@@ -51,7 +52,7 @@ def set_pipeline_status(file_id, status, filename=""):
     all_status = load_pipeline_status()
     entry = all_status.get(file_id, {})
     entry["status"] = status
-    entry["updated"] = datetime.now(tz=timezone.utc).isoformat()
+    entry["updated"] = datetime.now(tz=UTC).isoformat()
     if filename:
         entry["filename"] = filename
     all_status[file_id] = entry
@@ -77,7 +78,7 @@ def reset_stale_statuses():
                 entry["status"],
             )
             entry["status"] = "error"
-            entry["updated"] = datetime.now(tz=timezone.utc).isoformat()
+            entry["updated"] = datetime.now(tz=UTC).isoformat()
             changed = True
     if changed:
         with open(PIPELINE_STATUS_FILE, "w") as f:
@@ -86,11 +87,12 @@ def reset_stale_statuses():
 
 # --- Filename helpers ---
 
+
 def _validate_filename(filename):
     """Reject filenames with path separators or special characters."""
     if not filename:
         return False
-    if any(c in filename for c in "/\\:*?\"<>|"):
+    if any(c in filename for c in '/\\:*?"<>|'):
         return False
     if filename.startswith("."):
         return False
@@ -105,15 +107,14 @@ def _sanitize_filename(name):
 
 # --- Audio processing ---
 
+
 def transcribe_audio(file_path):
     """Transcribe audio file using Whisper. Returns timestamped transcript text."""
     logger.info("Transcribing: %s", file_path)
 
     file_size = os.path.getsize(file_path)
     if file_size > MAX_AUDIO_FILE_SIZE:
-        raise ValueError(
-            f"File too large: {file_size} bytes (max {MAX_AUDIO_FILE_SIZE})"
-        )
+        raise ValueError(f"File too large: {file_size} bytes (max {MAX_AUDIO_FILE_SIZE})")
 
     model = _get_whisper_model()
     result = model.transcribe(file_path)
@@ -227,11 +228,13 @@ def create_document_via_claude(filename, transcript, timestamp=""):
                 if block.type == "tool_use":
                     logger.info("Claude calling tool: %s", block.name)
                     result = handle_tool_call(block.name, block.input)
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": json.dumps(result),
-                    })
+                    tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": json.dumps(result),
+                        }
+                    )
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
         else:
@@ -239,6 +242,7 @@ def create_document_via_claude(filename, transcript, timestamp=""):
 
 
 # --- Google Drive helpers ---
+
 
 def _upload_to_gdrive(local_path, folder_type):
     """Upload a file to Google Drive if connected. folder_type is 'documents' or 'recordings'.
@@ -291,6 +295,7 @@ def _record_history(filename, status, message=""):
     """Record processing result for the status page."""
     try:
         from app import add_history_entry
+
         add_history_entry(filename, status, message)
     except Exception:
         logger.debug("Could not record history entry")
@@ -307,12 +312,14 @@ def archive_audio(file_path):
 def _find_existing_transcript(base_name, transcript_dir):
     """Return the path of an existing transcript for the given base name, or None."""
     import glob
+
     pattern = os.path.join(transcript_dir, f"{base_name}_*.txt")
     matches = sorted(glob.glob(pattern))
     return matches[-1] if matches else None
 
 
 # --- Full pipeline for a single Plaud recording ---
+
 
 def process_plaud_recording(file_id, raw_filename, plaud_client):
     """Download + transcribe + Claude + upload for a single Plaud recording.
@@ -329,7 +336,7 @@ def process_plaud_recording(file_id, raw_filename, plaud_client):
     os.makedirs(download_dir, exist_ok=True)
     file_path = os.path.join(download_dir, filename)
 
-    timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M")
+    timestamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M")
 
     try:
         # Step 1: Download
@@ -382,6 +389,7 @@ def process_plaud_recording(file_id, raw_filename, plaud_client):
 
 
 # --- Legacy entry point (used by file watcher) ---
+
 
 def process_audio_file(file_path):
     """Full pipeline: validate, transcribe, create document, archive."""

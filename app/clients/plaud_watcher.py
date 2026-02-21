@@ -3,14 +3,15 @@
 import json
 import logging
 import os
-import time
-from datetime import datetime, timezone
-
 import sys
+import time
+from datetime import UTC, datetime
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from config import load_config
 from clients.plaud_client import PlaudClient
+
+from config import load_config
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
@@ -25,11 +26,14 @@ def write_status(ok: bool, message: str) -> None:
     """Write Plaud connection status to a shared file for the settings page."""
     os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)
     with open(STATUS_FILE, "w") as f:
-        json.dump({
-            "ok": ok,
-            "message": message,
-            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-        }, f)
+        json.dump(
+            {
+                "ok": ok,
+                "message": message,
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+            },
+            f,
+        )
 
 
 def run() -> None:

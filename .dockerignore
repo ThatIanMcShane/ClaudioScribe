@@ -1,0 +1,11 @@
+.git/
+.github/
+.env
+config/
+output/
+__pycache__/
+*.pyc
+*.md
+LICENSE
+logo.*
+pyproject.toml

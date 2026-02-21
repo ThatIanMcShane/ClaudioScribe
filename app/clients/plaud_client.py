@@ -88,13 +88,17 @@ class PlaudClient:
 
         Each dict has at least: id, filename, duration, start_time.
         """
-        resp = self._request("GET", "/file/simple/web", params={
-            "skip": 0,
-            "limit": limit,
-            "is_trash": 0,
-            "sort_by": "edit_time",
-            "is_desc": "true",
-        })
+        resp = self._request(
+            "GET",
+            "/file/simple/web",
+            params={
+                "skip": 0,
+                "limit": limit,
+                "is_trash": 0,
+                "sort_by": "edit_time",
+                "is_desc": "true",
+            },
+        )
         if resp is None:
             return []
         data = resp.json()
