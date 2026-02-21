@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudioScribe</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%232563eb'/><rect x='12' y='6' width='8' height='14' rx='4' fill='white'/><path d='M9 17a7 7 0 0 0 14 0' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/><line x1='16' y1='24' x2='16' y2='27' stroke='white' stroke-width='2' stroke-linecap='round'/></svg>">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        h1 { font-size: 1.5rem; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+        .gear-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: #666; }
+        .gear-btn:hover { background: #e5e7eb; color: #333; }
+        .gear-btn svg { width: 22px; height: 22px; display: block; }
+
+        /* Two-column layout */
+        .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+        @media (max-width: 720px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+        .col-primary { min-width: 0; }
+        .col-history { min-width: 0; }
+
+        .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        .hint { color: #666; font-size: 0.8rem; margin-bottom: 8px; }
+        input[type="text"], input[type="password"], select, textarea {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 0.95rem; font-family: inherit; margin-bottom: 16px;
+        }
+        textarea { min-height: 120px; resize: vertical; }
+        input:read-only { background: #f5f5f5; color: #666; }
+        .btn { background: #2563eb; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; font-size: 0.95rem; cursor: pointer; display: inline-block; text-decoration: none; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-secondary { background: #e5e7eb; color: #374151; border: none; padding: 6px 14px; border-radius: 5px; font-size: 0.8rem; cursor: pointer; display: inline-block; text-decoration: none; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        .success { background: #d1fae5; color: #065f46; padding: 12px; border-radius: 6px; margin-bottom: 16px; transition: opacity 0.5s ease; }
+        .flash-dismiss.fade-out { opacity: 0; }
+        .banner { display: flex; align-items: center; justify-content: space-between; }
+        .banner-close { background: none; border: none; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0 0 0 12px; opacity: 0.5; color: inherit; }
+        .banner-close:hover { opacity: 1; }
+        .error { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
+        .key-display { font-family: monospace; color: #666; }
+        .section-title { font-size: 1.1rem; margin: 24px 0 12px; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+        .section-title:first-of-type { margin-top: 0; }
+        code { background: #f0f0f0; padding: 2px 5px; border-radius: 3px; font-size: 0.85rem; }
+        a { color: #2563eb; }
+        .status { padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9rem; }
+        .status-ok { background: #d1fae5; color: #065f46; }
+        .status-error { background: #fee2e2; color: #991b1b; }
+        .status-unknown { background: #f3f4f6; color: #6b7280; }
+        .gdrive-actions { display: flex; align-items: center; gap: 12px; }
+
+        /* Recordings list */
+        .rec-list { list-style: none; padding: 0; }
+        .rec-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; gap: 12px; }
+        .rec-item:last-child { border-bottom: none; }
+        .rec-name { font-size: 0.85rem; word-break: break-word; flex: 1; line-height: 1.3; }
+        .btn-sm { padding: 6px 14px; font-size: 0.8rem; border-radius: 5px; white-space: nowrap; }
+        .badge { padding: 5px 12px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+        .badge-processed { background: #d1fae5; color: #065f46; }
+        .badge-active { background: #dbeafe; color: #1e40af; }
+        .badge-error { background: #fee2e2; color: #991b1b; }
+        .badge-queued { background: #f3f4f6; color: #6b7280; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .local-icon { font-size: 0.7rem; flex-shrink: 0; width: 16px; text-align: center; }
+        .local-yes { color: #16a34a; }
+        .local-no { color: #d1d5db; }
+        .rec-loading { color: #6b7280; font-size: 0.9rem; padding: 12px 0; }
+        .rec-error { color: #991b1b; font-size: 0.9rem; padding: 12px 0; }
+        .rec-actions { position: relative; flex-shrink: 0; }
+        .menu-btn { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; color: #9ca3af; font-size: 1.1rem; line-height: 1; letter-spacing: 1px; }
+        .menu-btn:hover { background: #f3f4f6; color: #374151; }
+        .dropdown { display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; min-width: 220px; overflow: hidden; }
+        .dropdown.open { display: block; }
+        .dropdown button { display: block; width: 100%; text-align: left; padding: 9px 14px; border: none; background: none; cursor: pointer; font-size: 0.8rem; color: #374151; }
+        .dropdown button:hover { background: #f3f4f6; }
+        .dropdown button.destructive { color: #dc2626; }
+        .dropdown button.destructive:hover { background: #fef2f2; }
+        .pagination { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 0; border-top: 1px solid #eee; margin-top: 4px; font-size: 0.8rem; color: #6b7280; }
+        .pagination-btns { display: flex; gap: 6px; }
+        .pagination-btns button { background: #e5e7eb; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; color: #374151; }
+        .pagination-btns button:hover:not(:disabled) { background: #d1d5db; }
+        .pagination-btns button:disabled { opacity: 0.4; cursor: default; }
+        .page-size-toggle { display: flex; gap: 4px; align-items: center; }
+        .page-size-toggle span { color: #9ca3af; font-size: 0.75rem; }
+        .page-size-toggle button { background: none; border: 1px solid #d1d5db; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; color: #6b7280; }
+        .page-size-toggle button.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+        .page-size-toggle button:hover:not(.active) { background: #f3f4f6; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .badge-active { animation: pulse 1.5s ease-in-out infinite; }
+
+        /* Processing history (compact for sidebar) */
+        .history-title { font-size: 0.95rem; font-weight: 600; color: #555; margin-bottom: 12px; }
+        .history-card { background: #fff; border-radius: 6px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 6px; }
+        .history-entry { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .entry-info { flex: 1; min-width: 0; }
+        .filename { font-weight: 600; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .timestamp { color: #999; font-size: 0.7rem; margin-top: 1px; }
+        .message { color: #666; font-size: 0.75rem; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+        .message.expanded { white-space: normal; word-break: break-word; }
+        .history-empty { color: #666; text-align: center; padding: 16px; font-size: 0.85rem; }
+        .history-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+
+        /* Settings overlay */
+        .settings-overlay {
+            display: none; position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
+        }
+        .settings-overlay.open { display: flex; justify-content: center; align-items: flex-start; padding-top: 40px; }
+        .settings-panel {
+            background: #f5f5f5; width: 100%; max-width: 640px; max-height: calc(100vh - 80px);
+            border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            overflow-y: auto; animation: slideDown 0.2s ease-out;
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .settings-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 24px 0; position: sticky; top: 0; background: #f5f5f5;
+            z-index: 1; border-radius: 12px 12px 0 0;
+        }
+        .settings-header h2 { font-size: 1.2rem; }
+        .close-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: #666; font-size: 1.2rem; line-height: 1; }
+        .close-btn:hover { background: #e5e7eb; color: #333; }
+        .settings-body { padding: 0 24px 24px; }
+        .settings-footer { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+        /* Footer */
+        .footer { max-width: 960px; margin: 40px auto 24px; padding: 16px 20px 0; border-top: 1px solid #ddd; color: #999; font-size: 0.75rem; }
+        .footer a { color: #999; }
+        .footer a:hover { color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" style="width:28px;height:28px;vertical-align:-4px;margin-right:8px;"><circle cx="16" cy="16" r="16" fill="#2563eb"/><rect x="12" y="6" width="8" height="14" rx="4" fill="white"/><path d="M9 17a7 7 0 0 0 14 0" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="16" y1="24" x2="16" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>ClaudioScribe
+            </h1>
+            <button class="gear-btn" onclick="openSettings()" title="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.248a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+            </button>
+        </div>
+        <p class="subtitle">Transcribe, summarize, and organize your Plaud recordings</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="{{ 'success banner flash-dismiss' if category == 'success' else 'error banner' }}"><span>{{ message }}</span><button class="banner-close" onclick="this.parentElement.remove()">&times;</button></div>
+        {% endfor %}
+        {% endwith %}
+
+        <!-- Two-column grid -->
+        <div class="main-grid">
+            <div class="col-primary">
+                <div class="card" id="recordings-card">
+                    <label>Recordings</label>
+                    {% if plaud_status %}
+                    <div class="status {{ 'status-ok' if plaud_status.ok else 'status-error' }}" style="margin-top:4px;">
+                        {{ plaud_status.message }}
+                    </div>
+                    {% else %}
+                    <div class="status status-unknown" style="margin-top:4px;">
+                        Waiting for connection check...
+                    </div>
+                    {% endif %}
+                    {% if plaud_status and plaud_status.ok %}
+                    <div id="recordings-content">
+                        <p class="rec-loading">Loading recordings...</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-history">
+                <div class="history-title">Processing History</div>
+                <div id="history-content">
+                    <p class="rec-loading">Loading history...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        &copy; 2026 ClaudioScribe. Licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">GNU AGPL v3.0</a>.
+    </footer>
+
+    <!-- Settings overlay -->
+    <div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2>Configuration</h2>
+                <button class="close-btn" onclick="closeSettings()" title="Close">&times;</button>
+            </div>
+            <p class="subtitle" style="padding: 0 24px;">Manage your service connections and pipeline settings</p>
+            <div class="settings-body">
+                <form method="POST" action="/settings" id="settings-form">
+                    <h2 class="section-title">Plaud</h2>
+
+                    {% if plaud_configured %}
+                    <div class="status status-ok">Plaud API token configured</div>
+                    {% else %}
+                    <div class="status status-unknown">No Plaud API token set</div>
+                    {% endif %}
+
+                    <div class="card">
+                        <label>API Token</label>
+                        <p class="hint">Current: <span class="key-display">{{ masked_token }}</span></p>
+                        <div id="plaud-token-display">
+                            <button type="button" class="btn-secondary" onclick="showTokenInput('plaud')">Change Token</button>
+                        </div>
+                        <div id="plaud-token-edit" style="display:none;">
+                            <p class="hint">Get this from <a href="https://web.plaud.ai" target="_blank">web.plaud.ai</a> &rarr; DevTools (F12) &rarr; Application &rarr; Local Storage &rarr; copy the <code>tokenstr</code> value</p>
+                            <input type="password" id="plaud_token" name="plaud_token" placeholder="Paste new token">
+                            <div style="display:flex;gap:8px;">
+                                <button type="submit" class="btn-secondary">Save Token</button>
+                                <button type="button" class="btn-secondary" onclick="hideTokenInput('plaud')">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <label>API URL</label>
+                        <p class="hint">{{ config.plaud_base_url }}</p>
+                    </div>
+
+                    <h2 class="section-title">Google Drive</h2>
+
+                    {% if gdrive_connected %}
+                    <div class="status status-ok">Connected to Google Drive</div>
+                    <div class="card">
+                        <p class="hint" style="margin-bottom: 12px;">Documents and recordings are uploaded to your Google Drive under <strong>ClaudioScribe/</strong></p>
+                        <button type="button" class="btn btn-danger" onclick="if(confirm('Disconnect Google Drive?')){document.getElementById('gdrive-disconnect-form').submit()}">Disconnect Google Drive</button>
+                    </div>
+                    {% else %}
+                    <div class="status status-unknown">Not connected to Google Drive</div>
+                    <div class="card">
+                        <p class="hint" style="margin-bottom: 12px;">Connect Google Drive to access your recordings and transcriptions.</p>
+                        <a href="/auth/google" class="btn">Connect Google Drive</a>
+                    </div>
+                    {% endif %}
+
+                    <h2 class="section-title">Anthropic</h2>
+
+                    {% if anthropic_configured %}
+                    <div class="status status-ok">Anthropic API key configured</div>
+                    {% else %}
+                    <div class="status status-unknown">No Anthropic API key set</div>
+                    {% endif %}
+
+                    <div class="card">
+                        <label>API Key</label>
+                        <p class="hint">Current: <span class="key-display">{{ masked_key }}</span></p>
+                        <div id="anthropic-key-display" style="display:flex;gap:8px;align-items:center;">
+                            <button type="button" class="btn-secondary" onclick="showTokenInput('anthropic')">Change Key</button>
+                            <button type="button" class="btn-secondary" onclick="testAnthropicKey(this)">Test Connection</button>
+                            <span id="anthropic-test-result" style="font-size:0.8rem;"></span>
+                        </div>
+                        <div id="anthropic-key-edit" style="display:none;">
+                            <input type="password" id="anthropic_api_key" name="anthropic_api_key" placeholder="Paste new API key">
+                            <div style="display:flex;gap:8px;">
+                                <button type="submit" class="btn-secondary">Save Key</button>
+                                <button type="button" class="btn-secondary" onclick="hideTokenInput('anthropic')">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <label for="claude_model">Model</label>
+                        <select id="claude_model" name="claude_model">
+                            <option value="claude-sonnet-4-6" {% if config.claude_model == "claude-sonnet-4-6" %}selected{% endif %}>Claude Sonnet 4.6 (recommended)</option>
+                            <option value="claude-haiku-4-5-20251001" {% if config.claude_model == "claude-haiku-4-5-20251001" %}selected{% endif %}>Claude Haiku 4.5 (not recommended)</option>
+                            <option value="claude-opus-4-6" {% if config.claude_model == "claude-opus-4-6" %}selected{% endif %}>Claude Opus 4.6 (most expensive)</option>
+                        </select>
+                        <button type="submit" class="btn-secondary">Save Model</button>
+                    </div>
+
+                    <div class="card">
+                        <label for="claude_prompt">Claude Prompt Template</label>
+                        <p class="hint">Instructions given to Claude when creating documents from transcripts</p>
+                        <textarea id="claude_prompt" name="claude_prompt">{{ config.claude_prompt }}</textarea>
+                        <div style="display:flex;gap:8px;">
+                            <button type="submit" class="btn-secondary">Save Prompt</button>
+                            <button type="button" class="btn-secondary" onclick="if(confirm('Reset prompt to default?')){document.getElementById('claude_prompt').value=defaultPrompt}">Reset to Default</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <label for="log_level">Log Level</label>
+                        <select id="log_level" name="log_level">
+                            <option value="DEBUG" {% if config.log_level == "DEBUG" %}selected{% endif %}>DEBUG</option>
+                            <option value="INFO" {% if config.log_level == "INFO" %}selected{% endif %}>INFO</option>
+                            <option value="WARNING" {% if config.log_level == "WARNING" %}selected{% endif %}>WARNING</option>
+                            <option value="ERROR" {% if config.log_level == "ERROR" %}selected{% endif %}>ERROR</option>
+                        </select>
+                        <button type="submit" class="btn-secondary">Save Log Level</button>
+                    </div>
+
+                    <h2 class="section-title">Whisper <span style="font-size:0.75rem;font-weight:400;color:#888;">Automatic Speech Recognition &middot; local CPU</span></h2>
+
+                    <div class="card">
+                        <label>Transcription Model</label>
+                        <p class="hint"><a href="https://openai.com/index/whisper/" target="_blank">OpenAI Whisper</a> base model — used to transcribe audio recordings locally.</p>
+                        <div id="whisper-status" class="hint" style="margin-bottom: 12px;">Checking...</div>
+                        <button type="button" class="btn-secondary" id="whisper-update-btn" onclick="updateWhisper()">Re-download Model</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if gdrive_connected %}
+    <form id="gdrive-disconnect-form" method="POST" action="/auth/google/disconnect" style="display:none;"></form>
+    {% endif %}
+
+    <script>
+    var defaultPrompt = {{ default_prompt | tojson }};
+
+    // Auto-dismiss flash messages
+    document.querySelectorAll('.flash-dismiss').forEach(function(el) {
+        setTimeout(function() {
+            el.classList.add('fade-out');
+            setTimeout(function() { el.remove(); }, 500);
+        }, 3000);
+    });
+
+    var tokenIds = {
+        plaud:    { display: 'plaud-token-display',    edit: 'plaud-token-edit',    input: 'plaud_token' },
+        anthropic:{ display: 'anthropic-key-display',  edit: 'anthropic-key-edit',  input: 'anthropic_api_key' }
+    };
+    function showTokenInput(key) {
+        var t = tokenIds[key];
+        document.getElementById(t.display).style.display = 'none';
+        document.getElementById(t.edit).style.display = '';
+        document.getElementById(t.input).focus();
+    }
+    function hideTokenInput(key) {
+        var t = tokenIds[key];
+        document.getElementById(t.edit).style.display = 'none';
+        document.getElementById(t.input).value = '';
+        document.getElementById(t.display).style.display = '';
+    }
+
+    function testAnthropicKey(btn) {
+        var result = document.getElementById('anthropic-test-result');
+        btn.disabled = true;
+        btn.textContent = 'Testing\u2026';
+        result.textContent = '';
+        fetch('/anthropic/test', { method: 'POST' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.textContent = 'Test Connection';
+                result.style.color = data.ok ? '#065f46' : '#991b1b';
+                result.textContent = data.message;
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.textContent = 'Test Connection';
+                result.style.color = '#991b1b';
+                result.textContent = 'Network error';
+            });
+    }
+
+    function openSettings() {
+        document.getElementById('settings-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSettings() {
+        document.getElementById('settings-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeSettings();
+    });
+
+    function loadWhisperStatus() {
+        fetch('/whisper/status')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var el = document.getElementById('whisper-status');
+                if (!data.cached) {
+                    el.textContent = 'Not downloaded yet — will download on first transcription.';
+                } else {
+                    var date = new Date(data.downloaded);
+                    el.textContent = 'Cached: ' + data.size_mb + ' MB, downloaded ' + date.toLocaleDateString();
+                }
+            })
+            .catch(function() {
+                document.getElementById('whisper-status').textContent = 'Could not check status.';
+            });
+    }
+    loadWhisperStatus();
+
+    function updateWhisper() {
+        var btn = document.getElementById('whisper-update-btn');
+        var status = document.getElementById('whisper-status');
+        btn.disabled = true;
+        btn.textContent = 'Downloading\u2026';
+        status.textContent = 'Downloading model (~139 MB)\u2026';
+        fetch('/whisper/update', { method: 'POST' })
+            .then(function(r) { return r.json(); })
+            .then(function() { pollWhisperDownload(btn, status); })
+            .catch(function() {
+                btn.disabled = false;
+                btn.textContent = 'Re-download Model';
+                status.textContent = 'Failed to start download.';
+            });
+    }
+
+    function pollWhisperDownload(btn, status) {
+        var poll = setInterval(function() {
+            fetch('/whisper/update/status')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.running) return;
+                    clearInterval(poll);
+                    btn.disabled = false;
+                    btn.textContent = 'Re-download Model';
+                    if (data.ok) {
+                        loadWhisperStatus();
+                    } else {
+                        status.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    }
+                })
+                .catch(function() {
+                    clearInterval(poll);
+                    btn.disabled = false;
+                    btn.textContent = 'Re-download Model';
+                    status.textContent = 'Failed to check download status.';
+                });
+        }, 2000);
+    }
+
+    (function() {
+        // --- Recordings ---
+        var container = document.getElementById('recordings-content');
+        if (container) {
+            var pollTimer = null;
+            var currentPage = 0;
+            var pageSize = 5;
+            var allRecordings = [];
+            var STATUS_LABELS = {
+                'new':                  {label: 'Process Now', type: 'button'},
+                'queued':               {label: 'Queued\u2026',       type: 'badge', cls: 'badge-queued'},
+                'downloading':          {label: 'Downloading\u2026',  type: 'badge', cls: 'badge-active'},
+                'uploading_recording':  {label: 'Uploading\u2026',    type: 'badge', cls: 'badge-active'},
+                'transcribing':         {label: 'Transcribing\u2026', type: 'badge', cls: 'badge-active'},
+                'analyzing':            {label: 'Analyzing\u2026',    type: 'badge', cls: 'badge-active'},
+                'processed':            {label: 'Processed',          type: 'badge-reprocess', cls: 'badge-processed'},
+                'error':                {label: 'Error',              type: 'badge-retry', cls: 'badge-error'}
+            };
+            var ACTIVE_STATUSES = ['queued', 'downloading', 'uploading_recording', 'transcribing', 'analyzing'];
+
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function renderRecordings(recordings) {
+                allRecordings = recordings;
+                if (!recordings.length) {
+                    container.innerHTML = '<p class="rec-loading">No recordings found.</p>';
+                    return;
+                }
+
+                var totalPages = Math.ceil(recordings.length / pageSize);
+                if (currentPage >= totalPages) currentPage = totalPages - 1;
+                var start = currentPage * pageSize;
+                var pageRecs = recordings.slice(start, start + pageSize);
+
+                var hasActive = false;
+                var html = '<ul class="rec-list">';
+                pageRecs.forEach(function(rec) {
+                    var info = STATUS_LABELS[rec.status] || STATUS_LABELS['new'];
+                    if (ACTIVE_STATUSES.indexOf(rec.status) !== -1) hasActive = true;
+
+                    html += '<li class="rec-item" data-id="' + rec.id + '">';
+                    var localIcon = rec.local
+                        ? '<span class="local-icon local-yes" title="Downloaded locally">&#10003;</span>'
+                        : '<span class="local-icon local-no" title="Cloud only">&#9729;</span>';
+                    var nameHtml = escapeHtml(rec.filename);
+                    var meta = [];
+                    if (rec.start_time) {
+                        var d = new Date(rec.start_time);
+                        meta.push(d.toLocaleDateString(undefined, {day:'numeric',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString(undefined, {hour:'2-digit',minute:'2-digit'}));
+                    }
+                    if (rec.duration) meta.push(rec.duration);
+                    if (meta.length) nameHtml += ' <span style="color:#9ca3af;font-size:0.75rem">(' + meta.join(' &middot; ') + ')</span>';
+                    html += localIcon + '<span class="rec-name">' + nameHtml + '</span>';
+
+                    if (info.type === 'button') {
+                        html += '<button class="btn btn-sm" onclick="processRecording(this, \'' + rec.id + '\')">Process Now</button>';
+                    } else if (info.type === 'badge-retry') {
+                        html += '<span class="badge ' + info.cls + '">' + info.label + '</span>';
+                        html += ' <button class="btn btn-sm" style="margin-left:6px;font-size:0.7rem;padding:4px 10px" onclick="processRecording(this, \'' + rec.id + '\')">Retry</button>';
+                    } else if (info.type === 'badge-reprocess') {
+                        html += '<span class="badge ' + info.cls + '">' + info.label + '</span>';
+                        html += ' <button class="btn btn-sm" style="margin-left:6px;font-size:0.7rem;padding:4px 10px" onclick="processRecording(this, \'' + rec.id + '\')">Reprocess</button>';
+                    } else {
+                        html += '<span class="badge ' + info.cls + '">' + info.label + '</span>';
+                    }
+
+                    html += '<div class="rec-actions">';
+                    html += '<button class="menu-btn" onclick="toggleMenu(event, this)" title="More actions">&middot;&middot;&middot;</button>';
+                    html += '<div class="dropdown">';
+                    html += '<button class="destructive" onclick="deleteAudio(\'' + rec.id + '\')">Delete downloaded recording</button>';
+                    html += '<button class="destructive" onclick="deleteDocuments(\'' + rec.id + '\')">Delete local transcripts &amp; summaries</button>';
+                    html += '</div></div>';
+
+                    html += '</li>';
+                });
+                html += '</ul>';
+
+                // Pagination controls
+                if (totalPages > 1 || recordings.length > 5) {
+                    html += '<div class="pagination">';
+                    html += '<div class="pagination-btns">';
+                    html += '<button onclick="changePage(-1)"' + (currentPage === 0 ? ' disabled' : '') + '>&laquo; Prev</button>';
+                    html += '<span>' + (currentPage + 1) + ' / ' + totalPages + '</span>';
+                    html += '<button onclick="changePage(1)"' + (currentPage >= totalPages - 1 ? ' disabled' : '') + '>Next &raquo;</button>';
+                    html += '</div>';
+                    html += '<div class="page-size-toggle"><span>Show</span>';
+                    html += '<button onclick="setPageSize(5)"' + (pageSize === 5 ? ' class="active"' : '') + '>5</button>';
+                    html += '<button onclick="setPageSize(10)"' + (pageSize === 10 ? ' class="active"' : '') + '>10</button>';
+                    html += '</div>';
+                    html += '</div>';
+                }
+
+                container.innerHTML = html;
+
+                // Also check all recordings (not just current page) for active status
+                recordings.forEach(function(rec) {
+                    if (ACTIVE_STATUSES.indexOf(rec.status) !== -1) hasActive = true;
+                });
+                if (hasActive && !pollTimer) {
+                    pollTimer = setInterval(loadRecordings, 3000);
+                } else if (!hasActive && pollTimer) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            }
+
+            window.changePage = function(delta) {
+                currentPage += delta;
+                renderRecordings(allRecordings);
+            };
+
+            window.setPageSize = function(size) {
+                pageSize = size;
+                currentPage = 0;
+                renderRecordings(allRecordings);
+            };
+
+            function loadRecordings() {
+                fetch('/recordings')
+                    .then(function(resp) { return resp.json(); })
+                    .then(function(data) {
+                        renderRecordings(data);
+                        loadHistory();
+                    })
+                    .catch(function() {
+                        container.innerHTML = '<p class="rec-error">Failed to load recordings.</p>';
+                    });
+            }
+
+            loadRecordings();
+
+            window.toggleMenu = function(event, btn) {
+                event.stopPropagation();
+                var dropdown = btn.nextElementSibling;
+                var wasOpen = dropdown.classList.contains('open');
+                // Close all open menus first
+                document.querySelectorAll('.dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+                if (!wasOpen) dropdown.classList.add('open');
+            };
+
+            // Close menus when clicking elsewhere
+            document.addEventListener('click', function() {
+                document.querySelectorAll('.dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+            });
+
+            window.deleteAudio = function(fileId) {
+                if (!confirm('Delete the downloaded recording file from this server?')) return;
+                fetch('/recording/' + encodeURIComponent(fileId) + '/audio', { method: 'DELETE' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.ok) loadRecordings();
+                        else alert('Error: ' + (data.error || 'Unknown'));
+                    })
+                    .catch(function() { alert('Network error.'); });
+            };
+
+            window.deleteDocuments = function(fileId) {
+                if (!confirm('Delete all local transcripts and summaries for this recording?')) return;
+                fetch('/recording/' + encodeURIComponent(fileId) + '/documents', { method: 'DELETE' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.ok) loadRecordings();
+                        else alert('Error: ' + (data.error || 'Unknown'));
+                    })
+                    .catch(function() { alert('Network error.'); });
+            };
+
+            window.processRecording = function(btn, fileId) {
+                btn.disabled = true;
+                btn.textContent = 'Starting\u2026';
+
+                fetch('/process/' + encodeURIComponent(fileId), { method: 'POST' })
+                    .then(function(resp) { return resp.json(); })
+                    .then(function(data) {
+                        if (data.ok) {
+                            if (!pollTimer) pollTimer = setInterval(loadRecordings, 3000);
+                            loadRecordings();
+                            loadHistory();
+                        } else {
+                            btn.disabled = false;
+                            btn.textContent = 'Process Now';
+                            alert('Error: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(function() {
+                        btn.disabled = false;
+                        btn.textContent = 'Process Now';
+                        alert('Network error.');
+                    });
+            };
+        }
+
+        // --- Processing History ---
+        var historyContainer = document.getElementById('history-content');
+
+        function escapeHtmlHistory(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderHistory(history) {
+            if (!history.length) {
+                historyContainer.innerHTML = '<div class="history-card"><p class="history-empty">No files processed yet.</p></div>';
+                return;
+            }
+            var html = '';
+            history.forEach(function(entry) {
+                html += '<div class="history-card"><div class="history-entry">';
+                html += '<div class="entry-info">';
+                html += '<div class="filename">' + escapeHtmlHistory(entry.filename) + '</div>';
+                html += '<div class="timestamp">' + escapeHtmlHistory(entry.timestamp) + '</div>';
+                if (entry.message) {
+                    html += '<div class="message" onclick="this.classList.toggle(\'expanded\')" title="Click to expand">' + escapeHtmlHistory(entry.message) + '</div>';
+                }
+                html += '</div>';
+                var badgeCls = entry.status === 'success' ? 'badge-success' : 'badge-error';
+                html += '<span class="history-badge badge ' + badgeCls + '">' + escapeHtmlHistory(entry.status) + '</span>';
+                html += '</div></div>';
+            });
+            historyContainer.innerHTML = html;
+        }
+
+        function loadHistory() {
+            fetch('/status')
+                .then(function(resp) { return resp.json(); })
+                .then(renderHistory)
+                .catch(function() {
+                    historyContainer.innerHTML = '<p class="rec-error">Failed to load history.</p>';
+                });
+        }
+
+        window.loadHistory = loadHistory;
+        loadHistory();
+    })();
+    </script>
+</body>
+</html>

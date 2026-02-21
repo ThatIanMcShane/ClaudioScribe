@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClaudioScribe Privacy Policy</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%232563eb'/><rect x='12' y='6' width='8' height='14' rx='4' fill='white'/><path d='M9 17a7 7 0 0 0 14 0' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/><line x1='16' y1='24' x2='16' y2='27' stroke='white' stroke-width='2' stroke-linecap='round'/></svg>">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
+        .container { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        h2 { font-size: 1.15rem; margin: 24px 0 8px; color: #555; }
+        p { margin-bottom: 12px; }
+        ul { margin: 0 0 12px 24px; }
+        li { margin-bottom: 4px; }
+        .updated { color: #666; font-size: 0.85rem; margin-bottom: 24px; }
+        a { color: #2563eb; }
+        nav { margin-bottom: 24px; }
+        nav a { color: #2563eb; text-decoration: none; margin-right: 16px; }
+        nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ClaudioScribe Privacy Policy</h1>
+        <p class="updated">Last updated: February 2026</p>
+        <nav>
+            <a href="/">Back to Settings</a>
+        </nav>
+
+        <h2>What ClaudioScribe Does</h2>
+        <p>ClaudioScribe is a self-hosted audio processing tool that transcribes recordings from Plaud devices and creates structured documents using AI. It runs entirely on your own infrastructure.</p>
+
+        <h2>Data We Access</h2>
+        <p>When you connect Google Drive, ClaudioScribe requests the <strong>drive.file</strong> scope, which only allows access to files and folders that ClaudioScribe itself creates. It cannot read, modify, or delete any other files on your Google Drive.</p>
+        <p>Specifically, ClaudioScribe creates:</p>
+        <ul>
+            <li>A <strong>ClaudioScribe/Documents/</strong> folder for generated .docx summaries</li>
+            <li>A <strong>ClaudioScribe/Recordings/</strong> folder for original audio files</li>
+        </ul>
+
+        <h2>Data We Store</h2>
+        <p>ClaudioScribe stores the following on your local machine (in the config/ directory):</p>
+        <ul>
+            <li>Google OAuth access token and refresh token (to upload files without re-authenticating)</li>
+            <li>Google Drive folder IDs (to know where to upload)</li>
+            <li>Your Plaud API token and Anthropic API key (for transcription and document creation)</li>
+        </ul>
+        <p>All credentials are stored locally in a JSON configuration file on your machine or server. They are never transmitted to any third party.</p>
+
+        <h2>Third-Party Services</h2>
+        <p>ClaudioScribe interacts with the following services on your behalf:</p>
+        <ul>
+            <li><strong>Google Drive API</strong> &mdash; to upload documents and recordings to your Drive</li>
+            <li><strong>Plaud API</strong> &mdash; to download your audio recordings</li>
+            <li><strong>Anthropic API</strong> &mdash; to process transcripts into structured documents (transcript text is sent to Claude)</li>
+        </ul>
+
+        <h2>Data Sharing</h2>
+        <p>ClaudioScribe does not collect, share, or sell any personal data. There is no analytics, telemetry, or tracking. The application runs entirely on your own infrastructure.</p>
+
+        <h2>Data Retention</h2>
+        <p>You control all data. Disconnecting Google Drive from the settings page immediately deletes all stored tokens. Files already uploaded to Google Drive remain in your Drive until you delete them.</p>
+
+        <h2>Revoking Access</h2>
+        <p>You can revoke ClaudioScribe's access to Google Drive at any time:</p>
+        <ul>
+            <li>Click "Disconnect Google Drive" on the settings page, or</li>
+            <li>Visit <a href="https://myaccount.google.com/permissions" target="_blank">Google Account Permissions</a> and remove ClaudioScribe</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p>ClaudioScribe is an open-source project. For questions or concerns, open an issue on the project's GitHub repository.</p>
+    </div>
+</body>
+</html>

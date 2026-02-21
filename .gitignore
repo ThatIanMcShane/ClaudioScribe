@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+icloud_watcher.log
+processed_files.log
+config/settings.json
+config/history.json
+config/plaud_status.json
+config/oauth_state
+output/
