@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install "setuptools<71" pip-audit bandit
-      - run: pip-audit -r requirements.txt --no-deps
+      - run: pip-audit -r requirements.txt --no-deps --disable-pip
       - run: bandit -r app/ -c pyproject.toml
 
   docker-build:
