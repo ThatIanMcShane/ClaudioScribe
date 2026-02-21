@@ -40,7 +40,7 @@ The settings overlay is organized by service:
 ## Stack
 
 - **[OpenAI Whisper](https://openai.com/index/whisper/)** — Speech-to-text, runs locally on CPU inside Docker
-- **[Claude API](https://console.anthropic.com)** — Structures transcripts into formatted documents via tool use
+- **[Claude API](https://platform.claude.com/settings/keys)** — Structures transcripts into formatted documents via tool use
 - **python-docx** — .docx generation with markdown-to-Word conversion (bold, italic, hyperlinks, tables, headings)
 - **Google Drive API** — Automatic upload via OAuth
 - **Flask** — Web UI for configuration and recording management
@@ -49,7 +49,7 @@ The settings overlay is organized by service:
 ## Requirements
 
 - Docker Desktop (macOS or Linux)
-- Anthropic API key ([console.anthropic.com](https://console.anthropic.com))
+- Anthropic API key ([create one here](https://platform.claude.com/settings/keys))
 - Plaud device and account ([web.plaud.ai](https://web.plaud.ai))
 
 ## Project Structure
