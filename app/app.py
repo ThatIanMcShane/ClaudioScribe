@@ -5,9 +5,9 @@ import secrets
 import threading
 from datetime import UTC
 
-from clients.plaud_client import PlaudClient
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
+from clients.plaud_client import PlaudClient
 from config import DEFAULTS, load_config, save_config
 
 logging.basicConfig(

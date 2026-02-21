@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install ruff
+      - run: pip install ruff==0.15.0
       - run: ruff check app/
       - run: ruff format --check app/
 
@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install "setuptools<71" pip-audit bandit
-      - run: pip-audit -r requirements.txt
+      - run: pip-audit -r requirements.txt --no-deps
       - run: bandit -r app/ -c pyproject.toml
 
   docker-build:

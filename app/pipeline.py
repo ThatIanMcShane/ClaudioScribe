@@ -4,9 +4,9 @@ import os
 from datetime import UTC, datetime
 
 import anthropic
-import doc_writer
 import whisper
 
+import doc_writer
 from config import load_config
 
 logger = logging.getLogger(__name__)

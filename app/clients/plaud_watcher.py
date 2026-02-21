@@ -10,7 +10,6 @@ from datetime import UTC, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from clients.plaud_client import PlaudClient
-
 from config import load_config
 
 logging.basicConfig(

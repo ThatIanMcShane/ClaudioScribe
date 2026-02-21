@@ -6,6 +6,9 @@ line-length = 120
 select = ["E", "F", "I", "UP"]
 ignore = ["E501"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["app", "config", "pipeline", "doc_writer", "clients"]
+
 [tool.ruff.format]
 quote-style = "double"
 
